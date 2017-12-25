@@ -1137,7 +1137,7 @@ chanuser::chanuser(const char *str)
 	: CustomDataStorage()
 #endif
 {
-	char *a = strchr(str, '!');
+	char *a = (char *) strchr(str, '!');
 	if(a) mem_strncpy(nick, str, (int) abs(str - a) + 1);
 	else mem_strcpy(nick, str);
 
@@ -1158,8 +1158,8 @@ chanuser::chanuser(const char *m, const chan *ch, const int f, const bool scan)
 	: CustomDataStorage()
 #endif
 {
-	char *a = strchr(m, '!');
-	char *b = strchr(m, '@');
+	char *a = (char *) strchr(m, '!');
+	char *b = (char *) strchr(m, '@');
 
 	reason = NULL;
 

@@ -1329,8 +1329,8 @@ const char *entChattr::getValue() const
 		if(*pFlags)
 		{
 			snprintf(modes, sizeof(modes), "+%s", pFlags);
-			k = strchr(pFlags, 'k');
-			l = strchr(pFlags, 'l');
+			k = (char *) strchr(pFlags, 'k');
+			l = (char *) strchr(pFlags, 'l');
 		}
 		if(*mFlags)
 		{

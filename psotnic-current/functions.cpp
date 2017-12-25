@@ -731,8 +731,8 @@ bool extendhost(const char *host, char *buf, unsigned int len)
 	if(strlen(host) + 10 > len || !isRealStr(host) || *host == '#')
 		return false;
 
-	ex = strchr(host, '!');
-	at = strchr(host, '@');
+	ex = (char *) strchr(host, '!');
+	at = (char *) strchr(host, '@');
 
 	if(ex != strrchr(host, '!') || at != strrchr(host, '@')) return false;
 	
@@ -797,7 +797,7 @@ void nickCreator(char *nick)
 					continue;
 				}
 
-				if((n=strchr(config.nickappend, nick[i])))
+				if((n= (char *) strchr(config.nickappend, nick[i])))
 				{
 					n++;
 					nick[i]=*n;

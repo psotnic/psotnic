@@ -457,7 +457,7 @@ void client::joinAllChannels()
 
 void client::gotNickChange(const char *from, const char *to)
 {
-	char *a = strchr(from, '!');
+	char *a = (char *) strchr(from, '!');
 	char *fromnick;
 	chan *p = first;
 
@@ -884,7 +884,7 @@ void client::gotUserQuit(const char *mask, const char *reason)
 	chan *ch = first;
 	int netsplit = reason && wasoptest::checkSplit(reason);
 
-	a = strchr(mask, '!');
+	a = (char *) strchr(mask, '!');
 	if(a) mem_strncpy(nick, mask, abs(a - mask) + 1);
 	else mem_strcpy(nick, mask);
 

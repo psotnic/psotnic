@@ -249,7 +249,7 @@ int chan::invite(const char *nick)
 
 	if(!getUser(nick))
 	{
-		char *a = strchr(nick, '!');
+		char *a = (char*) strchr(nick, '!');
 		if(a) *a = '\0';
 
 			::invite.wisePush("INVITE ", nick, " ", (const char *) name, NULL);

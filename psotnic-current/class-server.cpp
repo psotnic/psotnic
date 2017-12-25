@@ -123,7 +123,7 @@ void Server::Isupport::init()
     {
         if((p1=find("CHANLIMIT")))
         {
-            if((p2=strchr(p1, ':')))
+            if((p2=(char *)strchr(p1, ':')))
             {
                 *p2++;
 
@@ -140,7 +140,7 @@ void Server::Isupport::init()
     {
         if((p1=find("MAXLIST")))
         {
-            if((p2=strchr(p1, ':')))
+            if((p2= (char *) strchr(p1, ':')))
             {
                 *p2++;
 
