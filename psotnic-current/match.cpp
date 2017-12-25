@@ -432,7 +432,7 @@ int matchBan(const char *ban, const char *nick, const char *ident, const char *h
 
 int matchIp(const char *bannedIp, const char *ip)
 {
-	char *slash = strrchr(bannedIp, '/');
+	char *slash = (char *) strrchr(bannedIp, '/');
 
 	if(!slash)
 		return match(bannedIp, ip);

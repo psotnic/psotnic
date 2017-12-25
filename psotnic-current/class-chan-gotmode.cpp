@@ -92,7 +92,7 @@ void chan::gotMode(const char *modes, const char *args, const char *mask)
 	{
 		if(chanModeRequiresArgument(mode[0][i], mode[1][i]))
 		{
-			a = strchr(args, ' ');
+			a = (char *) strchr(args, ' ');
 			if(a) mem_strncpy(arg[i], args, abs(args - a)+1);
 			else
 			{

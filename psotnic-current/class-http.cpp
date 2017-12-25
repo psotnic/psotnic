@@ -30,7 +30,7 @@ http::url::url(const char *u)
 	mem_strcpy(link, u);
 	u += 7;
 
-	char *a = strchr(u, '/');
+	char *a = (char *) strchr(u, '/');
 
 	if(a)
 	{
