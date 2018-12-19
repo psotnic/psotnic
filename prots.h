@@ -10,7 +10,10 @@
 #define rand hide_this_function
 #define srand hide_this_function2
 
+#define _GLIBCXX_INCLUDE_NEXT_C_HEADERS
 #include <stdlib.h>
+#undef _GLIBCXX_INCLUDE_NEXT_C_HEADERS
+
 #undef rand
 #undef srand
 int rand();
