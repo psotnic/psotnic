@@ -3,7 +3,8 @@
 use strict;
 use FileHandle;
 use Getopt::Long;
-
+my $current_directory = getcwd();
+print "Aktualny katalog: $current_directory\n";
 our ($antiptrace, $noircbacktrace, $ssl, $little_endian, $big_endian, $cc_prefix, $cc_options, $ld_options, $disable_adns, $firedns);
 
 if(!GetOptions(
@@ -97,8 +98,8 @@ uptime
 vctrl
 words";
 
-require 'tests/test.pm';
-chdir('tests');
+require "$current_directory/tests/test.pm";
+chdir("$current_directory/tests");
 print "[*] Running system check (this may take a while)\n";
 my $os = `uname`;
 $os =~ s/\n//;
