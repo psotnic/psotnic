@@ -1,8 +1,9 @@
 #!/usr/bin/perl
-
 use strict;
 use FileHandle;
 use Getopt::Long;
+use Cwd;
+
 my $current_directory = getcwd();
 print "Aktualny katalog: $current_directory\n";
 our ($antiptrace, $noircbacktrace, $ssl, $little_endian, $big_endian, $cc_prefix, $cc_options, $ld_options, $disable_adns, $firedns);
