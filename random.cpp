@@ -101,7 +101,7 @@ void srand(int a, int b, int c)
 
 int rand()
 {
-return abs(static_cast<int>(xsrand.rand()));
+	return abs(static_cast<int>(xsrand.rand()));
 }
 
 /**
