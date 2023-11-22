@@ -52,9 +52,9 @@ CTCPREPLY ctcp_irssi[] = {
 
 /* psotnic */
 CTCPREPLY ctcp_psotnic[] = {
-	{ "VERSION",		"VERSION psotnic %V - running on %O %A" },
+	{ "VERSION",		"VERSION weechat %V - running on %O %A" },
 	{ "CLIENTINFO",		"CLIENTINFO PING VERSION TIME USERINFO CLIENTINFO" },
-	{ "USERINFO",		"USERINFO psotnic %V - running on %O %A" },
+	{ "USERINFO",		"USERINFO weechat %V - running on %O %A" },
 	{ "TIME",			"TIME %T" },
 	{ "PING * *",   	"PING %*" },
  	{ 0, NULL }
@@ -171,7 +171,7 @@ CTCPREPLY ctcp_bitchx[] = {
 
 /* dzony loker */
 CTCPREPLY ctcp_dzony[] = {
-	{ "VERSION",                "VERSION \002ïï–zony LokÈrÆ 5.0ïï\002 by MarYOUshÆ [l33t ScRIPt]" },
+	{ "VERSION",                "VERSION \002‚Ä¢‚Ä¢√êzony Lok√©r¬Æ 5.0‚Ä¢‚Ä¢\002 by MarYOUsh¬Æ [l33t ScRIPt]" },
 	{ "CLIENTINFO PING",        "CLIENTINFO PING returns the arguments it receives" },
 	{ "CLIENTINFO VERSION",     "CLIENTINFO VERSION shows client type, version and environment" },
 	{ "CLIENTINFO TIME",        "CLIENTINFO TIME tells you the time on the user's host" },
