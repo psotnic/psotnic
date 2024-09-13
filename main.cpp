@@ -608,7 +608,7 @@ int main(int argc, char *argv[])
 			if(net.irc.status & STATUS_CONNECTED)
 			{
 				net.irc.send("NICK ", (const char *) config.nick, NULL);
-				net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+				net.irc.send("USER ", (const char *) config.ident, " * * :", (const char *) config.realname, NULL);
 				
 				net.irc.status &= ~STATUS_SSL_HANDSHAKING;
 			}
@@ -637,7 +637,7 @@ int main(int argc, char *argv[])
 						net.irc.killTime = NOW + set.AUTH_TIME;
 						net.irc.send("PASS ", (const char *) config.bnc.getPass(), NULL);
 						net.irc.send("NICK ", (const char *) config.nick, NULL);
-						net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+						net.irc.send("USER ", (const char *) config.ident, " * * :", (const char *) config.realname, NULL);
 						net.irc.send("VIP ", (const char *) config.vhost, NULL);
 						net.irc.send("CONN ", (const char *) srv->getHost().ip, " ", itoa(srv->getPort()), NULL);
 					}
@@ -663,7 +663,7 @@ int main(int argc, char *argv[])
 						if(net.irc.pass)
 							net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
 						net.irc.send("NICK ", (const char *) config.nick, NULL);
-						net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+						net.irc.send("USER ", (const char *) config.ident, " * * :", (const char *) config.realname, NULL);
                     }
 					else
 					{
@@ -681,7 +681,7 @@ int main(int argc, char *argv[])
 					if(net.irc.pass)
 						net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
 					net.irc.send("NICK ", (const char *) config.nick, NULL);
-					net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+					net.irc.send("USER ", (const char *) config.ident, " * * :", (const char *) config.realname, NULL);
 				}
 			}
 		}
