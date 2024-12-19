@@ -534,7 +534,7 @@ void str2args(char *word, const char *str, int x, int y)
 		wystepujacy w tym slowie zostanie z ignorowany. podobnie dla znaku
 		END_CHAR_ARG. jezeli znak za nim nie istnieje, lub nie jest to spacja to
 		znaki END_CHAR_ARG w srodku sa ignorowane. 
-		przyk³ady:
+		przykï¿½ady:
 		str2args('cos "1 2"') = 'cos', '1 2'
 	        str2args('cos 1" 2"') = 'cos', '1"', '2"'
 		str2args('cos c"o"s" dupa') = 'cos', 'c"o"s"', 'dupa'
