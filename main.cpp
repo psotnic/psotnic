@@ -676,3 +676,4 @@ if(net.irc.fd && net.irc.status & STATUS_SYNSENT)
 }
 
 return 0;
+}
