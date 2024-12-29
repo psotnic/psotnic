@@ -587,28 +587,27 @@ int main(int argc, char *argv[])
 			}
 		}
 #ifdef HAVE_SSL
-if(net.irc.fd && net.irc.status & STATUS_SSL_HANDSHAKING)
-{
-    if(net.irc.status & STATUS_SYNSENT)
-    {
-        if(FD_ISSET(net.irc.fd, &wfd))
-        {
-            DEBUG(printf("[D] SSL: TCP connection has been established\n"));
-            net.irc.status &= ~STATUS_SYNSENT;
-        }
-        else
-            continue;
-    }
-    
-    net.irc.SSLHandshake();
-    if(net.irc.status & STATUS_CONNECTED)
-    {
-        net.irc.send("CAP LS", NULL);
-        net.irc.send("NICK ", (const char *) config.nick, NULL);
-        net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
-        net.irc.status &= ~STATUS_SSL_HANDSHAKING;
-    }
-}
+		if(net.irc.fd && net.irc.status & STATUS_SSL_HANDSHAKING)
+		{
+			if(net.irc.status & STATUS_SYNSENT)
+			{
+				if(FD_ISSET(net.irc.fd, &wfd))
+				{
+					DEBUG(printf("[D] SSL: TCP connection has been established\n"));
+					net.irc.status &= ~STATUS_SYNSENT;
+				}
+				else
+					continue;
+			}
+			net.irc.SSLHandshake();
+			if(net.irc.status & STATUS_CONNECTED)
+			{
+				net.irc.send("CAP LS", NULL);
+				net.irc.send("NICK ", (const char *) config.nick, NULL);
+				net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+				net.irc.status &= ~STATUS_SSL_HANDSHAKING;
+			}
+		}
 #endif
 
 if(net.irc.fd && net.irc.status & STATUS_SYNSENT)
@@ -677,4 +676,3 @@ if(net.irc.fd && net.irc.status & STATUS_SYNSENT)
 }
 
 return 0;
-}
