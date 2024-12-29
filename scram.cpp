@@ -107,7 +107,7 @@ Scram::ScramStatus Scram::processClientFirst()
 	output = "n,,n=" + std::string(config.sasl_username) + ",r=" + this->clientNonceB64;
 	this->clientFirstMessageBare = output.substr(3);
 	base64Encode(output);
-	ME.sendAuthentication("%s", output.c_str(), NULL);
+	ME.sendAuthentication(output.c_str(), NULL);
 
 	this->step++;
 	return SCRAM_IN_PROGRESS;
@@ -213,7 +213,7 @@ Scram::ScramStatus Scram::processServerFirst(std::string &input)
 	base64Encode(clientProofB64);
 	output = clientFinalMessageWithoutProof + ",p=" + clientProofB64;
 	base64Encode(output);
-	ME.sendAuthentication("%s", output.c_str(), NULL);
+	ME.sendAuthentication(output.c_str(), NULL);
 	free(clientKey);
 	free(clientSignature);
 	free(clientProof);
