@@ -901,7 +901,7 @@ void parse_irc(char *data)
 				auth_message[1 + username_len] = '\0';
 				memcpy(auth_message + 1 + username_len + 1, config.sasl_password, password_len);
 				auth_message64 = encode_base64(auth_message_len, (unsigned char*) auth_message);
-				ME.sendAuthentication(auth_message64, NULL);
+				ME.sendAuthentication("%s", auth_message64, NULL);
 				free(auth_message64);
 				free(auth_message);
 			}
