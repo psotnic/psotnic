@@ -298,7 +298,8 @@ void Scram::authenticate(std::string input)
 	else if (status == Scram::SCRAM_ERROR)
 	{
 		DEBUG(printf("SCRAM authentication failed\n"));
-		ME.quit("changing servers");
+		net.irc.send("QUIT :changing servers", NULL);
+		ME.nextReconnect = NOW + set.IRC_CONN_DELAY;
 	}
 }
 
