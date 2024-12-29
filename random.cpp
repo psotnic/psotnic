@@ -102,7 +102,7 @@ void srand(int a, int b, int c)
 int rand()
 {
 
-	return abs(xsrand.rand());
+	return std::abs((int)xsrand.rand());
 }
 
 /**

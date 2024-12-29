@@ -50,6 +50,7 @@ class options
 class ent
 {
 	public:
+	virtual ~ent() = default;
 	const char *name;
 	static options::event _event;
 	bool dontPrintIfDefault;
