@@ -813,18 +813,19 @@ void parse_irc(char *data)
 
 		return;
 	}
-	if(!strcmp(arg[1], "CAP") )
+	if(!strcmp(arg[1], "CAP"))
 	{
 		if(!strcmp(arg[3], "LS"))
 		{
 			char *cap_list, *cap, *p;
 			bool send_cap_end = true;
 			cap_list = srewind(data, 4) + 1;
-			DEBUG(printf("[*] Capabilities supported: %s\n", cap_list));
+			DEBUG(printf("[D] Capabilities supported: %s\n", cap_list));
+			
 			for(cap = strtok_r(cap_list, " ", &p); cap; cap=strtok_r(NULL, " ", &p))
 			{
-				if(!strcasecmp(cap, "sasl")
-					&& config.sasl_mechanism > 0 && config.sasl_username.getLen() && config.sasl_password.getLen())
+				if(!strcasecmp(cap, "sasl") && config.sasl_mechanism > 0 
+				&& config.sasl_username.getLen() && config.sasl_password.getLen())
 				{
 					net.irc.send("CAP REQ :sasl");
 					send_cap_end = false;
@@ -832,7 +833,6 @@ void parse_irc(char *data)
 			}
 			if(send_cap_end)
 			{
-				// No caps requested
 				net.irc.send("CAP END");
 			}
 		}
@@ -841,7 +841,8 @@ void parse_irc(char *data)
 			char *cap_list, *cap, *p;
 			bool send_cap_end = true;
 			cap_list = srewind(data, 4) + 1;
-			DEBUG(printf("[*] Capabilities acknowledged: %s\n", cap_list));
+			DEBUG(printf("[D] Capabilities acknowledged: %s\n", cap_list));
+			
 			for(cap = strtok_r(cap_list, " ", &p); cap; cap=strtok_r(NULL, " ", &p))
 			{
 				if(!strcasecmp(cap, "sasl"))
@@ -850,16 +851,16 @@ void parse_irc(char *data)
 					{
 						net.irc.send("AUTHENTICATE PLAIN");
 					}
-					if (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1
-						|| config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256
-						|| config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512)
+					if (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1 ||
+						config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256 ||
+						config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512)
 					{
 						std::string mechanism;
 						switch (config.sasl_mechanism)
 						{
-							case SASL_MECHANISM_SCRAM_SHA_1 : mechanism = "SCRAM-SHA-1"; break;
-							case SASL_MECHANISM_SCRAM_SHA_256 : mechanism = "SCRAM-SHA-256"; break;
-							case SASL_MECHANISM_SCRAM_SHA_512 : mechanism = "SCRAM-SHA-512"; break;
+							case SASL_MECHANISM_SCRAM_SHA_1: mechanism = "SCRAM-SHA-1"; break;
+							case SASL_MECHANISM_SCRAM_SHA_256: mechanism = "SCRAM-SHA-256"; break;
+							case SASL_MECHANISM_SCRAM_SHA_512: mechanism = "SCRAM-SHA-512"; break;
 						}
 						delete scram;
 						try {
@@ -881,6 +882,8 @@ void parse_irc(char *data)
 			}
 		}
 	}
+
+	// Authentication handling
 	if(!strcmp(arg[0], "AUTHENTICATE"))
 	{
 		if(!strcmp(arg[1], "+"))
@@ -908,25 +911,25 @@ void parse_irc(char *data)
 			}
 		}
 		if (scram != nullptr && (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1 ||
-								 config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256 ||
-								 config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512))
+			config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256 ||
+			config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512))
 		{
 			scram->authenticate(std::string(arg[1]));
 		}
 	}
-	if(!strcmp(arg[1], "903") )
+
+	// Authentication results
+	if(!strcmp(arg[1], "903"))
 	{
-		// SASL authentication successful
-		DEBUG(printf("[-] SASL authentication successful\n"));
+		DEBUG(printf("[D] SASL authentication successful\n"));
 		net.irc.send("CAP END");
 	}
-	if(!strcmp(arg[1], "904") )
+	if(!strcmp(arg[1], "904"))
 	{
-		// SASL authentication failed
-		DEBUG(printf("[-] SASL authentication failed\n"));
-		net.send(HAS_N, "[-] SASL authentication failed on %s", (const char *) config.currentServer->getHost().connectionString);
+		DEBUG(printf("[D] SASL authentication failed\n"));
+		net.send(HAS_N, "[-] SASL authentication failed");
 		net.irc.send("QUIT :changing servers");
-	}	
+	}
 	/* some numeric replies */
 	if((i = atoi(arg[1])))
 	{

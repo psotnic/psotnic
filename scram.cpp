@@ -299,7 +299,6 @@ void Scram::authenticate(std::string input)
 	{
 		DEBUG(printf("SCRAM authentication failed\n"));
 		net.irc.send("QUIT :changing servers", NULL);
-		ME.nextReconnect = NOW + set.IRC_CONN_DELAY;
 	}
 }
 
