@@ -1150,3 +1150,13 @@ void client::notice(const char *target, const char *lst, ...)
         net.irc.send(a, NULL);
         free(a);
 }
+
+void client::sendAuthentication(const char *lst, ...)
+{
+	va_list list;
+	char buffer[MAX_LEN];
+	va_start(list, lst);
+	vsnprintf(buffer, MAX_LEN, lst, list);
+	va_end(list);
+	net.irc.send("AUTHENTICATE %s", buffer);
+}

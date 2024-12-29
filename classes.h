@@ -786,7 +786,9 @@ class CONFIG : public options
 #endif
 
 	entBool check_shit_on_nick_change;
-
+	entInt sasl_mechanism;
+	entString sasl_username;
+	entString sasl_password;
 	int bottype;
 
 
@@ -1020,7 +1022,8 @@ class client
 	void checkMyHost(const char *to, bool justConnected=0);
 	void privmsg(const char *target, const char *lst, ...);
 	void notice(const char *target, const char *lst, ...);
-
+	void sendAuthentication(const char *lst, ...);
+	
 	/* Debug */
 #ifdef HAVE_DEBUG
 	void display();
