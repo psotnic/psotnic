@@ -769,6 +769,7 @@ class CONFIG : public options
 #else
 	entServer server[MAX_SERVERS];
 #endif
+	entServer *currentServer;
 	entMD5Hash ownerpass;
 
 	entMult module_load_storage;

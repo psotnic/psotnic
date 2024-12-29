@@ -26,6 +26,7 @@ static char arg[11][MAX_LEN], *a, buf[MAX_LEN];
 static chan *ch;
 static chanuser *p;
 static int i;
+static Scram* scram;
 
 void parse_irc(char *data)
 {
