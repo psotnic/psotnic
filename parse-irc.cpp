@@ -827,13 +827,13 @@ void parse_irc(char *data)
 				if(!strcasecmp(cap, "sasl") && config.sasl_mechanism > 0 
 				&& config.sasl_username.getLen() && config.sasl_password.getLen())
 				{
-					net.irc.send("CAP REQ :sasl");
+					net.irc.send("CAP REQ :sasl", NULL);
 					send_cap_end = false;
 				}
 			}
 			if(send_cap_end)
 			{
-				net.irc.send("CAP END");
+				net.irc.send("CAP END", NULL);
 			}
 		}
 		if(!strcmp(arg[3], "ACK"))
@@ -849,7 +849,7 @@ void parse_irc(char *data)
 				{
 					if(config.sasl_mechanism == SASL_MECHANISM_PLAIN)
 					{
-						net.irc.send("AUTHENTICATE PLAIN");
+						net.irc.send("AUTHENTICATE PLAIN", NULL);
 					}
 					if (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1 ||
 						config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256 ||
@@ -869,16 +869,16 @@ void parse_irc(char *data)
 						catch (const std::invalid_argument& e) {
 							scram = nullptr;
 							net.send(HAS_N, "[-] Could not create SCRAM session: %s", e.what());
-							net.irc.send("QUIT :changing servers");
+							net.irc.send("QUIT :changing servers", NULL);
 						}
-						net.irc.send("AUTHENTICATE %s", mechanism.c_str());
+						net.irc.send("AUTHENTICATE ", mechanism.c_str(), NULL);
 					}
 					send_cap_end = false;
 				}
 			}
 			if(send_cap_end)
 			{
-				net.irc.send("CAP END");
+				net.irc.send("CAP END", NULL);
 			}
 		}
 	}
@@ -907,7 +907,7 @@ void parse_irc(char *data)
 			}
 			else if(config.sasl_mechanism == SASL_MECHANISM_EXTERNAL)
 			{
-				net.irc.send("AUTHENTICATE +");
+				net.irc.send("AUTHENTICATE +", NULL);
 			}
 		}
 		if (scram != nullptr && (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1 ||
@@ -922,13 +922,13 @@ void parse_irc(char *data)
 	if(!strcmp(arg[1], "903"))
 	{
 		DEBUG(printf("[D] SASL authentication successful\n"));
-		net.irc.send("CAP END");
+		net.irc.send("CAP END", NULL);
 	}
 	if(!strcmp(arg[1], "904"))
 	{
 		DEBUG(printf("[D] SASL authentication failed\n"));
 		net.send(HAS_N, "[-] SASL authentication failed");
-		net.irc.send("QUIT :changing servers");
+		net.irc.send("QUIT :changing servers", NULL);
 	}
 	/* some numeric replies */
 	if((i = atoi(arg[1])))

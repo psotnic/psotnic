@@ -293,7 +293,7 @@ void Scram::authenticate(std::string input)
 	if (status == Scram::SCRAM_SUCCESS)
 	{
 		DEBUG(printf("SCRAM authentication succeeded\n"));
-		net.irc.send("AUTHENTICATE +");
+		net.irc.send("AUTHENTICATE +", NULL);
 	}
 	else if (status == Scram::SCRAM_ERROR)
 	{
