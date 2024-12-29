@@ -587,108 +587,94 @@ int main(int argc, char *argv[])
 			}
 		}
 #ifdef HAVE_SSL
-//		DEBUG(printf("[D] net.irc.fd: %d, STATUS_SSL: %u, STATUS_SSL_HANDSHAKING: %u\n", 
-//			net.irc.fd, net.irc.status & STATUS_SSL, net.irc.status & STATUS_SSL_HANDSHAKING));
-			
-		if(net.irc.fd && net.irc.status & STATUS_SSL_HANDSHAKING)
-		{
-			if(net.irc.status & STATUS_SYNSENT)
-			{
-				if(FD_ISSET(net.irc.fd, &wfd))
-				{
-					DEBUG(printf("[D] SSL: TCP connection has been established\n"));
-					net.irc.status &= ~STATUS_SYNSENT;
-					//net.irc.status |= STATUS_CONNECTED;
-				}
-				else 
-					continue;
-			}
-			
-			net.irc.SSLHandshake();
-			if(net.irc.status & STATUS_CONNECTED)
-			{
-				net.irc.send("CAP LS");
-				net.irc.send("NICK ", (const char *) config.nick, NULL);
-				net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
-				
-				net.irc.status &= ~STATUS_SSL_HANDSHAKING;
-			}
-		}
+if(net.irc.fd && net.irc.status & STATUS_SSL_HANDSHAKING)
+{
+    if(net.irc.status & STATUS_SYNSENT)
+    {
+        if(FD_ISSET(net.irc.fd, &wfd))
+        {
+            DEBUG(printf("[D] SSL: TCP connection has been established\n"));
+            net.irc.status &= ~STATUS_SYNSENT;
+        }
+        else
+            continue;
+    }
+    
+    net.irc.SSLHandshake();
+    if(net.irc.status & STATUS_CONNECTED)
+    {
+        net.irc.send("CAP LS", NULL);
+        net.irc.send("NICK ", (const char *) config.nick, NULL);
+        net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+        net.irc.status &= ~STATUS_SSL_HANDSHAKING;
+    }
+}
 #endif
-		
-		if(net.irc.fd && net.irc.status & STATUS_SYNSENT)
-		{
-			if(FD_ISSET(net.irc.fd, &wfd))
-			{
-				if(net.irc.status & STATUS_SOCKS5)
-				{
-					DEBUG(printf("socks = 1\n"));
-					net.irc.status = STATUS_SOCKS5_CONNECTED | STATUS_SOCKS5;
-					socks5.work(0);
-				}
-				else if(net.irc.status & STATUS_BNC)
-				{
-					entServer *srv = client::getRandomServer();
 
-					if(srv)
-					{
-						net.irc.status = STATUS_CONNECTED | STATUS_BNC;
-						net.send(HAS_N, "[+] Connection to BNC established", NULL);
+if(net.irc.fd && net.irc.status & STATUS_SYNSENT)
+{
+    if(FD_ISSET(net.irc.fd, &wfd))
+    {
+        if(net.irc.status & STATUS_SOCKS5)
+        {
+            DEBUG(printf("socks = 1\n"));
+            net.irc.status = STATUS_SOCKS5_CONNECTED | STATUS_SOCKS5;
+            socks5.work(0);
+        }
+        else if(net.irc.status & STATUS_BNC)
+        {
+            entServer *srv = client::getRandomServer();
+            if(srv)
+            {
+                net.irc.status = STATUS_CONNECTED | STATUS_BNC;
+                net.send(HAS_N, "[+] Connection to BNC established", NULL);
+                net.irc.killTime = NOW + set.AUTH_TIME;
+                net.irc.send("PASS ", (const char *) config.bnc.getPass(), NULL);
+                net.irc.send("NICK ", (const char *) config.nick, NULL);
+                net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+                net.irc.send("VIP ", (const char *) config.vhost, NULL);
+                net.irc.send("CONN ", (const char *) srv->getHost().ip, " ", itoa(srv->getPort()), NULL);
+            }
+            else
+            {
+                net.send(HAS_N, "[+] Connection to BNC established, but no servers are added", NULL);
+                net.irc.close("Config creator is a dumbass");
+            }
+        }
+        else if(net.irc.status & STATUS_ROUTER)
+        {
+            entServer *srv = client::getRandomServer();
+            if(srv)
+            {
+                net.irc.status = STATUS_CONNECTED | STATUS_ROUTER;
+                net.send(HAS_N, "[+] Connection to ROUTER established", NULL);
+                net.irc.killTime = NOW + set.AUTH_TIME;
+                net.irc.send((const char *) config.router.getPass(), NULL);
+                net.irc.send("telnet ", (const char *) srv->getHost().ip, " ", itoa(srv->getPort()), NULL);
+                if(net.irc.pass)
+                    net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
+                net.irc.send("NICK ", (const char *) config.nick, NULL);
+                net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+            }
+            else
+            {
+                net.send(HAS_N, "[+] Connection to ROUTER established, but no servers are added", NULL);
+                net.irc.close("Config creator is a dumbass");
+            }
+        }
+        else
+        {
+            net.irc.status = STATUS_CONNECTED;
+            registration:
+            net.irc.killTime = NOW + set.AUTH_TIME;
+            if(net.irc.pass)
+                net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
+            net.irc.send("CAP LS", NULL);
+            net.irc.send("NICK ", (const char *) config.nick, NULL);
+            net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
+        }
+    }
+}
 
-						net.irc.killTime = NOW + set.AUTH_TIME;
-						net.irc.send("PASS ", (const char *) config.bnc.getPass(), NULL);
-						net.irc.send("NICK ", (const char *) config.nick, NULL);
-						net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
-						net.irc.send("VIP ", (const char *) config.vhost, NULL);
-						net.irc.send("CONN ", (const char *) srv->getHost().ip, " ", itoa(srv->getPort()), NULL);
-					}
-					else
-					{
-						net.send(HAS_N, "[+] Connection to BNC established, but no servers are added", NULL);
-						net.irc.close("Config creator is a dumbass");
-					}
-				}
-				else if(net.irc.status & STATUS_ROUTER)
-				{
-					entServer *srv = client::getRandomServer();
-
-					if(srv)
-					{
-						net.irc.status = STATUS_CONNECTED | STATUS_ROUTER;
-						net.send(HAS_N, "[+] Connection to ROUTER established", NULL);
-
-						net.irc.killTime = NOW + set.AUTH_TIME;
-						net.irc.send((const char *) config.router.getPass(), NULL);
-						net.irc.send("telnet ", (const char *) srv->getHost().ip, " ", itoa(srv->getPort()), NULL);
-
-						if(net.irc.pass)
-							net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
-						net.irc.send("NICK ", (const char *) config.nick, NULL);
-						net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
-                    }
-					else
-					{
-						net.send(HAS_N, "[+] Connection to ROUTER established, but no servers are added", NULL);
-						net.irc.close("Config creator is a dumbass");
-					}
-				}
-				else
-				{
-
-					net.irc.status = STATUS_CONNECTED;
-					registration:
-					net.irc.killTime = NOW + set.AUTH_TIME;
-
-					if(net.irc.pass)
-						net.irc.send("PASS ", (const char *) net.irc.pass, NULL);
-
-					net.irc.send("CAP LS");
-					net.irc.send("NICK ", (const char *) config.nick, NULL);
-					net.irc.send("USER ", (const char *) config.ident, " 8 * :", (const char *) config.realname, NULL);
-				}
-			}
-		}
-	}
-
-	return 0;
+return 0;
 }
