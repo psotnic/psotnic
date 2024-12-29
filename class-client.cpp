@@ -1161,5 +1161,5 @@ void client::sendAuthentication(const char *lst, ...)
     va_end(list);
 
     // poprawne wywołanie z końcowym NULL:
-    net.irc.send("AUTHENTICATE %s", buffer, NULL);
+    net.irc.send("AUTHENTICATE ", buffer, NULL);
 }
