@@ -26,7 +26,7 @@ if(!GetOptions(
 
 my %targets;
 
-$targets{'dynamic'} = '-Wall -Wno-non-virtual-dtor -fno-inline';
+$targets{'dynamic'} = '-Wall -Wno-non-virtual-dtor';
 $targets{'static'} = '-Wall -Wno-non-virtual-dtor -static -DHAVE_STATIC';
 $targets{'debug'} = '-DHAVE_DEBUG -g -fno-inline -pedantic -Wall -Wno-long-long -Wformat=2 -Wunused -Wno-non-virtual-dtor';
 
