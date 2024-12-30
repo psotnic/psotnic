@@ -246,96 +246,57 @@ void lurk()
         }
         else if(!pid)
         {
-            // Zachowaj kopie ważnych deskryptorów
-            int saved_listenfd = -1;
-            int saved_irc_fd = -1;
-            int saved_hub_fd = -1;
-
-            if(net.listenfd > 0) {
-                saved_listenfd = dup(net.listenfd);
-            }
-            if(net.irc.fd > 0) {
-                saved_irc_fd = dup(net.irc.fd);
-            }
-            if(net.hub.fd > 0) {
-                saved_hub_fd = dup(net.hub.fd);
-            }
-
+            // Proces potomny
             printf("[+] Going into background [pid: %d]\n", (int) getpid());
             
+            // Utwórz nową sesję
             if(setsid() == -1) {
                 perror("[!] Cannot create new session: setsid()");
                 exit(1);
             }
 
-            // Zapisz PID przed zamknięciem deskryptorów
+            // Zapisz PID przed zmianami deskryptorów
             inetconn p;
             char buf[MAX_LEN];
             snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
             p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
             p.send(itoa(getpid()), NULL);
 
-            // Zachowaj katalog roboczy dla utworzenia plików
-            char cwd[PATH_MAX];
-            if(getcwd(cwd, sizeof(cwd)) == NULL) {
-                strcpy(cwd, ".");
-            }
+            // Debugowanie stanu początkowego
+            fprintf(stderr, "[D] Initial state:\n");
+            fprintf(stderr, "[D] listenfd: %d\n", net.listenfd);
+            fprintf(stderr, "[D] irc.fd: %d\n", net.irc.fd);
+            fprintf(stderr, "[D] hub.fd: %d\n", net.hub.fd);
 
-            // Tylko w trybie non-creation
+            // Jeśli nie jesteśmy w trybie tworzenia usera
             if(!creation) {
-                pid = fork();
-                if(pid == -1) {
-                    perror("[!] Second fork failed");
-                    exit(1);
-                }
-                if(pid != 0) {
-                    exit(0);
-                }
+                // Daj czas na inicjalizację socketu
+                sleep(1);
 
-                // Przywróć zapisane deskryptory
-                if(saved_listenfd != -1) {
-                    dup2(saved_listenfd, net.listenfd);
-                    close(saved_listenfd);
-                }
-                if(saved_irc_fd != -1) {
-                    dup2(saved_irc_fd, net.irc.fd);
-                    close(saved_irc_fd);
-                }
-                if(saved_hub_fd != -1) {
-                    dup2(saved_hub_fd, net.hub.fd);
-                    close(saved_hub_fd);
-                }
-
-                // Przekieruj standardowe deskryptory
+                // Zamknij standardowe deskryptory dopiero po inicjalizacji
                 int fd = open("/dev/null", O_RDWR);
                 if(fd != -1) {
                     dup2(fd, STDIN_FILENO);
                     dup2(fd, STDOUT_FILENO);
                     dup2(fd, STDERR_FILENO);
-                    if(fd > 2) close(fd);
-                }
-
-                // Usuń pozostałe deskryptory
-                for(int fd = sysconf(_SC_OPEN_MAX); fd > 2; fd--) {
-                    if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd) {
+                    if(fd > 2) {
                         close(fd);
                     }
                 }
 
-                // Wróć do katalogu roboczego
-                chdir(cwd);
-            }
+                // Zachowaj ważne deskryptory i zamknij resztę
+                if(net.listenfd > 0) {
+                    int tmp_listen = dup(net.listenfd);
+                    dup2(tmp_listen, net.listenfd);
+                    close(tmp_listen);
+                }
 
-            // Debug info
-            fprintf(stderr, "[D] Creation mode: %s\n", creation ? "yes" : "no");
-            fprintf(stderr, "[D] Descriptors after daemonization:\n");
-            fprintf(stderr, "[D] listenfd: %d\n", net.listenfd);
-            fprintf(stderr, "[D] irc.fd: %d\n", net.irc.fd);
-            fprintf(stderr, "[D] hub.fd: %d\n", net.hub.fd);
-            fprintf(stderr, "[D] stdin: %d\n", STDIN_FILENO);
-            fprintf(stderr, "[D] stdout: %d\n", STDOUT_FILENO);
-            fprintf(stderr, "[D] stderr: %d\n", STDERR_FILENO);
-            fprintf(stderr, "[D] Current dir: %s\n", cwd);
+                // Nie zmieniaj katalogu aby zachować możliwość zapisu plików
+                fprintf(stderr, "[D] Final state:\n"); 
+                fprintf(stderr, "[D] listenfd: %d\n", net.listenfd);
+                fprintf(stderr, "[D] irc.fd: %d\n", net.irc.fd);
+                fprintf(stderr, "[D] hub.fd: %d\n", net.hub.fd);
+            }
 
             return;
         }
