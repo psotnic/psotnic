@@ -236,77 +236,98 @@ void antiptrace_lurk()
 
 void lurk()
 {
-    if(!config.dontfork)
-    {
-        pid_t pid = fork();
-        if(pid == -1)
-        {
-            printf("[-] Fork failed: %s\n", strerror(errno));
-            exit(1);
-        }
-        else if(!pid)
-        {
-            // Proces potomny
-            printf("[+] Going into background [pid: %d]\n", (int) getpid());
-            
-            // Utwórz nową sesję
-            if(setsid() == -1) {
-                perror("[!] Cannot create new session: setsid()");
-                exit(1);
-            }
+   if(!config.dontfork)
+   {
+       pid_t pid = fork();
+       if(pid == -1)
+       {
+           printf("[-] Fork failed: %s\n", strerror(errno));
+           exit(1);
+       }
+       else if(!pid)
+       {
+           // Proces potomny
+           // Zachowujemy stare deskryptory do logowania
+           int old_stdout = dup(STDOUT_FILENO);
+           int old_stderr = dup(STDERR_FILENO);
 
-            // Drugi fork tylko jeśli nie jesteśmy w trybie tworzenia użytkownika
-            if(!creation) {
-                pid = fork();
-                if(pid == -1) {
-                    perror("[!] Second fork failed");
-                    exit(1);
-                }
-                if(pid != 0) {
-                    exit(0);
-                }
-            }
+           printf("[+] Going into background [pid: %d]\n", (int) getpid());
+           
+           // Utwórz nową sesję
+           if(setsid() == -1) {
+               dprintf(old_stderr, "[!] Cannot create new session: setsid(): %s\n", strerror(errno));
+               exit(1);
+           }
 
-            // Zapisz PID przed zamknięciem deskryptorów
-            inetconn p;
-            char buf[MAX_LEN];
-            snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
-            p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-            p.send(itoa(getpid()), NULL);
+           // Drugi fork tylko jeśli nie jesteśmy w trybie tworzenia użytkownika
+           if(!creation) {
+               pid = fork();
+               if(pid == -1) {
+                   dprintf(old_stderr, "[!] Second fork failed: %s\n", strerror(errno));
+                   exit(1);
+               }
+               if(pid != 0) {
+                   exit(0);
+               }
+           }
 
-            // Nie zmieniamy katalogu jeśli jesteśmy w trybie tworzenia użytkownika
-            if(!creation) {
-                if(chdir("/") == -1) {
-                    perror("[!] chdir failed");
-                }
-            }
+           // Zapisz PID przed zamknięciem deskryptorów
+           inetconn p;
+           char buf[MAX_LEN];
+           snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
+           p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+           p.send(itoa(getpid()), NULL);
 
-            // W trybie tworzenia użytkownika zachowujemy standardowe deskryptory
-            if(!creation) {
-                int fd = open("/dev/null", O_RDWR);
-                if(fd != -1) {
-                    dup2(fd, STDIN_FILENO);
-                    dup2(fd, STDOUT_FILENO);
-                    dup2(fd, STDERR_FILENO);
-                    if(fd > 2) {
-                        close(fd);
-                    }
-                }
+           // Nie zmieniamy katalogu jeśli jesteśmy w trybie tworzenia użytkownika
+           if(!creation) {
+               if(chdir("/") == -1) {
+                   dprintf(old_stderr, "[!] chdir failed: %s\n", strerror(errno));
+               }
+           }
 
-                // Zamykamy pozostałe deskryptory oprócz sieciowych
-                for(int fd = sysconf(_SC_OPEN_MAX); fd > 2; fd--) {
-                    if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd) {
-                        close(fd);
-                    }
-                }
-            }            
-            return;
-        }
-        else
-        {
-            _exit(0);
-        }
-    }
+           // W trybie tworzenia użytkownika zachowujemy standardowe deskryptory
+           if(!creation) {
+               int fd = open("/dev/null", O_RDWR);
+               if(fd != -1) {
+                   dup2(fd, STDIN_FILENO);
+                   dup2(fd, STDOUT_FILENO);
+                   dup2(fd, STDERR_FILENO);
+                   if(fd > 2) {
+                       close(fd);
+                   }
+               }
+
+               // Zamykamy pozostałe deskryptory oprócz sieciowych
+               for(int fd = sysconf(_SC_OPEN_MAX); fd > 2; fd--) {
+                   if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd && fd != old_stdout && fd != old_stderr) {
+                       close(fd);
+                   }
+               }
+           }
+
+           // Debug info - zawsze wyświetlane
+           dprintf(old_stderr, "[D] Creation mode: %s\n", creation ? "yes" : "no");
+           dprintf(old_stderr, "[D] Descriptors after daemonization:\n");
+           dprintf(old_stderr, "[D] listenfd: %d\n", net.listenfd);
+           dprintf(old_stderr, "[D] irc.fd: %d\n", net.irc.fd);
+           dprintf(old_stderr, "[D] hub.fd: %d\n", net.hub.fd);
+           dprintf(old_stderr, "[D] stdin: %d\n", STDIN_FILENO);
+           dprintf(old_stderr, "[D] stdout: %d\n", STDOUT_FILENO);
+           dprintf(old_stderr, "[D] stderr: %d\n", STDERR_FILENO);
+
+           // Zamykamy dodatkowe deskryptory debugowania
+           if(!creation) {
+               close(old_stdout);
+               close(old_stderr);
+           }
+           
+           return;
+       }
+       else
+       {
+           _exit(0);
+       }
+   }
 }
 
 int rmdirext(const char *dir)
