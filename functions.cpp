@@ -236,95 +236,36 @@ void antiptrace_lurk()
 
 void lurk()
 {
-    if(!config.dontfork)
-    {
-        pid_t pid = fork();
-        if(pid == -1)
-        {
-            printf("[-] Fork failed: %s\n", strerror(errno));
-            exit(1);
-        }
-        else if(!pid)
-        {
-            // Proces potomny
-            printf("[+] Going into background [pid: %d]\n", (int) getpid());
-            
-            // Utwórz nową sesję
-            if(setsid() == -1) {
-                perror("[!] Cannot create new session: setsid()");
-                exit(1);
-            }
+	if(!config.dontfork)
+	{
+		pid_t pid = fork();
 
-            // Debugowanie przed
-            fprintf(stderr, "[D] Initial state:\n");
-            fprintf(stderr, "[D] listenfd: %d\n", net.listenfd);
-            fprintf(stderr, "[D] irc.fd: %d\n", net.irc.fd);
-            fprintf(stderr, "[D] hub.fd: %d\n", net.hub.fd);
+		if(pid == -1)
+		{
+			printf("[-] Fork failed: %s\n", strerror(errno));
+			_exit(1);
+		}
+		else if(!pid)
+		{
+			printf("[+] Going into background [pid: %d]\n", (int) getpid());
+			if(setsid() == -1)
+				perror("[!] Cannot create new session: setsid()");
+			freopen("/dev/null", "r", stdin);
+			freopen("/dev/null", "w", stdout);
+			freopen("/dev/null", "w", stderr);
 
-            // Zapisz PID
-            inetconn p;
-            char buf[MAX_LEN];
-            snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
-            p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-            p.send(itoa(getpid()), NULL);
-
-            // Zachowaj deskryptory sieciowe
-            int saved_listen = -1;
-            int saved_irc = -1; 
-            int saved_hub = -1;
-
-            if(net.listenfd > 0) {
-                saved_listen = dup(net.listenfd);
-            }
-            if(net.irc.fd > 0) {
-                saved_irc = dup(net.irc.fd);
-            }
-            if(net.hub.fd > 0) {
-                saved_hub = dup(net.hub.fd);
-            }
-
-            // Przekieruj standardowe deskryptory ale tylko dla nie-creation
-            if(!creation) {
-                int nullfd = open("/dev/null", O_RDWR);
-                if(nullfd != -1) {
-                    dup2(nullfd, STDIN_FILENO);
-                    dup2(nullfd, STDOUT_FILENO);
-                    dup2(nullfd, STDERR_FILENO);
-                    if(nullfd > 2) {
-                        close(nullfd);
-                    }
-                }
-
-                // NIE zamykamy innych deskryptorów
-            }
-
-            // Przywróć zapisane deskryptory
-            if(saved_listen != -1) {
-                dup2(saved_listen, net.listenfd);
-                close(saved_listen);
-            }
-            if(saved_irc != -1) {
-                dup2(saved_irc, net.irc.fd); 
-                close(saved_irc);
-            }
-            if(saved_hub != -1) {
-                dup2(saved_hub, net.hub.fd);
-                close(saved_hub);
-            }
-
-            // Debugowanie po
-            fprintf(stderr, "[D] Final state:\n");
-            fprintf(stderr, "[D] listenfd: %d\n", net.listenfd);
-            fprintf(stderr, "[D] irc.fd: %d\n", net.irc.fd);
-            fprintf(stderr, "[D] hub.fd: %d\n", net.hub.fd);
-
-            return;
-        }
-        else
-        {
-            _exit(0);
-        }
-    }
+			inetconn p;
+			char buf[MAX_LEN];
+			snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
+			p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+			p.send(itoa(getpid()), NULL);
+			return;
+		}
+		else
+		{
+			_exit(0);
+		}
+	}
 }
 
 int rmdirext(const char *dir)
