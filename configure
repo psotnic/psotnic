@@ -133,7 +133,7 @@ else {
 if($ssl) {
     print "[+] Enabling SSL support (irc, partyline)\n";
     $cflags .= "-DHAVE_SSL ";
-    $lflags .= "-lssl "; # Dodajemy również -lcrypto
+    $lflags .= "-lssl -lcrypto "; # Dodajemy również -lcrypto
 }
 else {
 	print "[-] Disabling SSL support (pass --with-ssl to enable)\n";
