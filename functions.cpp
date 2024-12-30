@@ -236,37 +236,76 @@ void antiptrace_lurk()
 
 void lurk()
 {
-	if(!config.dontfork)
-	{
-		pid_t pid = fork();
+    if (!config.dontfork)
+    {
+        printf("[DEBUG] Starting lurk process\n");
 
-		if(pid == -1)
-		{
-			printf("[-] Fork failed: %s\n", strerror(errno));
-			_exit(1);
-		}
-		else if(!pid)
-		{
-			printf("[+] Going into background [pid: %d]\n", (int) getpid());
-			if(setsid() == -1)
-				perror("[!] Cannot create new session: setsid()");
-			freopen("/dev/null", "r", stdin);
-			freopen("/dev/null", "w", stdout);
-			freopen("/dev/null", "w", stderr);
+        pid_t pid = fork();
 
-			inetconn p;
-			char buf[MAX_LEN];
-			snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
-			p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-			p.send(itoa(getpid()), NULL);
-			return;
-		}
-		else
-		{
-			_exit(0);
-		}
-	}
+        if (pid == -1)
+        {
+            printf("[-] Fork failed: %s\n", strerror(errno));
+            _exit(1);
+        }
+        else if (!pid)
+        {
+            // Proces potomny
+            printf("[+] Going into background [pid: %d]\n", (int)getpid());
+
+            // Tworzenie nowej sesji
+            if (setsid() == -1)
+            {
+                perror("[!] Cannot create new session: setsid()");
+            }
+            else
+            {
+                printf("[DEBUG] New session created successfully\n");
+            }
+
+            // Przekierowanie strumieni (dla testów można je pominąć)
+            FILE *log_file = fopen("psotnic_debug.log", "a");
+            if (log_file)
+            {
+                dup2(fileno(log_file), STDOUT_FILENO);
+                dup2(fileno(log_file), STDERR_FILENO);
+                fclose(log_file);
+                printf("[DEBUG] Logging redirected to psotnic_debug.log\n");
+            }
+            else
+            {
+                perror("[!] Failed to open debug log file");
+            }
+
+            // Utworzenie pliku PID
+            inetconn p;
+            char buf[MAX_LEN];
+            snprintf(buf, MAX_LEN, "pid.%s", (const char *)config.handle);
+            if (p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR) == -1)
+            {
+                perror("[!] Failed to create PID file");
+            }
+            else
+            {
+                printf("[DEBUG] PID file created successfully\n");
+                p.send(itoa(getpid()), NULL);
+            }
+
+            printf("[DEBUG] Child process setup complete\n");
+            return;
+        }
+        else
+        {
+            // Proces rodzicielski
+            printf("[DEBUG] Parent process exiting after fork\n");
+            _exit(0);
+        }
+    }
+    else
+    {
+        printf("[DEBUG] Running in foreground mode\n");
+    }
 }
+
 
 int rmdirext(const char *dir)
 {
