@@ -236,36 +236,73 @@ void antiptrace_lurk()
 
 void lurk()
 {
-	if(!config.dontfork)
-	{
-		pid_t pid = fork();
+    if(!config.dontfork)
+    {
+        pid_t pid = fork();
 
-		if(pid == -1)
-		{
-			printf("[-] Fork failed: %s\n", strerror(errno));
-			_exit(1);
-		}
-		else if(!pid)
-		{
-			printf("[+] Going into background [pid: %d]\n", (int) getpid());
-			if(setsid() == -1)
-				perror("[!] Cannot create new session: setsid()");
-			freopen("/dev/null", "r", stdin);
-			freopen("/dev/null", "w", stdout);
-			freopen("/dev/null", "w", stderr);
+        if(pid == -1)
+        {
+            printf("[-] Fork failed: %s\n", strerror(errno));
+            exit(1);
+        }
+        else if(!pid)
+        {
+            // Proces potomny
+            printf("[+] Going into background [pid: %d]\n", (int) getpid());
+            
+            // Utwórz nową sesję
+            if(setsid() == -1) {
+                perror("[!] Cannot create new session: setsid()");
+                exit(1);
+            }
 
-			inetconn p;
-			char buf[MAX_LEN];
-			snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
-			p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-			p.send(itoa(getpid()), NULL);
-			return;
-		}
-		else
-		{
-			_exit(0);
-		}
-	}
+            // Zabezpieczenie przed utratą kontroli nad terminalem
+            pid = fork();
+            if(pid == -1) {
+                perror("[!] Second fork failed");
+                exit(1);
+            }
+            if(pid != 0) {
+                exit(0);
+            }
+
+            // Zmień katalog roboczy aby nie blokować systemu plików
+            if(chdir("/") == -1) {
+                perror("[!] chdir failed");
+            }
+
+            // Zamknij odziedziczone deskryptory
+            for(int fd = sysconf(_SC_OPEN_MAX); fd >= 0; fd--) {
+                if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd) {
+                    close(fd);
+                }
+            }
+
+            // Otwórz na nowo deskryptory standardowe
+            int fd = open("/dev/null", O_RDWR);
+            if(fd != -1) {
+                dup2(fd, STDIN_FILENO);
+                dup2(fd, STDOUT_FILENO);
+                dup2(fd, STDERR_FILENO);
+                if(fd > 2) {
+                    close(fd);
+                }
+            }
+
+            // Zapisz PID
+            inetconn p;
+            char buf[MAX_LEN];
+            snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
+            p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+            p.send(itoa(getpid()), NULL);
+            return;
+        }
+        else
+        {
+            // Proces rodzic kończy działanie
+            _exit(0);
+        }
+    }
 }
 
 int rmdirext(const char *dir)
@@ -534,7 +571,7 @@ void str2args(char *word, const char *str, int x, int y)
 		wystepujacy w tym slowie zostanie z ignorowany. podobnie dla znaku
 		END_CHAR_ARG. jezeli znak za nim nie istnieje, lub nie jest to spacja to
 		znaki END_CHAR_ARG w srodku sa ignorowane. 
-		przyk�ady:
+		przyk�ady:
 		str2args('cos "1 2"') = 'cos', '1 2'
 	        str2args('cos 1" 2"') = 'cos', '1"', '2"'
 		str2args('cos c"o"s" dupa') = 'cos', 'c"o"s"', 'dupa'
