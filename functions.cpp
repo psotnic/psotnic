@@ -239,7 +239,6 @@ void lurk()
     if(!config.dontfork)
     {
         pid_t pid = fork();
-
         if(pid == -1)
         {
             printf("[-] Fork failed: %s\n", strerror(errno));
@@ -256,50 +255,55 @@ void lurk()
                 exit(1);
             }
 
-            // Zabezpieczenie przed utratą kontroli nad terminalem
-            pid = fork();
-            if(pid == -1) {
-                perror("[!] Second fork failed");
-                exit(1);
-            }
-            if(pid != 0) {
-                exit(0);
-            }
-
-            // Zmień katalog roboczy aby nie blokować systemu plików
-            if(chdir("/") == -1) {
-                perror("[!] chdir failed");
-            }
-
-            // Zamknij odziedziczone deskryptory
-            for(int fd = sysconf(_SC_OPEN_MAX); fd >= 0; fd--) {
-                if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd) {
-                    close(fd);
+            // Drugi fork tylko jeśli nie jesteśmy w trybie tworzenia użytkownika
+            if(!creation) {
+                pid = fork();
+                if(pid == -1) {
+                    perror("[!] Second fork failed");
+                    exit(1);
+                }
+                if(pid != 0) {
+                    exit(0);
                 }
             }
 
-            // Otwórz na nowo deskryptory standardowe
-            int fd = open("/dev/null", O_RDWR);
-            if(fd != -1) {
-                dup2(fd, STDIN_FILENO);
-                dup2(fd, STDOUT_FILENO);
-                dup2(fd, STDERR_FILENO);
-                if(fd > 2) {
-                    close(fd);
-                }
-            }
-
-            // Zapisz PID
+            // Zapisz PID przed zamknięciem deskryptorów
             inetconn p;
             char buf[MAX_LEN];
             snprintf(buf, MAX_LEN, "pid.%s", (const char *) config.handle);
             p.open(buf, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
             p.send(itoa(getpid()), NULL);
+
+            // Nie zmieniamy katalogu jeśli jesteśmy w trybie tworzenia użytkownika
+            if(!creation) {
+                if(chdir("/") == -1) {
+                    perror("[!] chdir failed");
+                }
+            }
+
+            // W trybie tworzenia użytkownika zachowujemy standardowe deskryptory
+            if(!creation) {
+                int fd = open("/dev/null", O_RDWR);
+                if(fd != -1) {
+                    dup2(fd, STDIN_FILENO);
+                    dup2(fd, STDOUT_FILENO);
+                    dup2(fd, STDERR_FILENO);
+                    if(fd > 2) {
+                        close(fd);
+                    }
+                }
+
+                // Zamykamy pozostałe deskryptory oprócz sieciowych
+                for(int fd = sysconf(_SC_OPEN_MAX); fd > 2; fd--) {
+                    if(fd != net.listenfd && fd != net.irc.fd && fd != net.hub.fd) {
+                        close(fd);
+                    }
+                }
+            }            
             return;
         }
         else
         {
-            // Proces rodzic kończy działanie
             _exit(0);
         }
     }
