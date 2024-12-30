@@ -26,7 +26,7 @@ if(!GetOptions(
 
 my %targets;
 
-$targets{'dynamic'} = '-Wall -Wno-non-virtual-dtor';
+$targets{'dynamic'} = '-Wall -Wno-non-virtual-dtor -fno-inline';
 $targets{'static'} = '-Wall -Wno-non-virtual-dtor -static -DHAVE_STATIC';
 $targets{'debug'} = '-DHAVE_DEBUG -g -fno-inline -pedantic -Wall -Wno-long-long -Wformat=2 -Wunused -Wno-non-virtual-dtor';
 
@@ -263,10 +263,10 @@ foreach $t (keys %targets)
     print $f "\t\@test -d bin || mkdir bin\n";
 
     if($t =~ /debug|dynamic/) {
-	print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags -export-dynamic\n";
+        print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags -export-dynamic\n";
     }
     else {
-	print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags\n";
+        print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags\n";
     }
 
     if(!($t =~ /debug/)) {
