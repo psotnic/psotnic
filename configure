@@ -3,6 +3,9 @@
 use strict;
 use FileHandle;
 use Getopt::Long;
+use Cwd;
+
+my $current_directory = getcwd();
 
 our ($antiptrace, $noircbacktrace, $ssl, $little_endian, $big_endian, $cc_prefix, $cc_options, $ld_options, $disable_adns, $firedns);
 
@@ -73,6 +76,7 @@ main.o
 match.o
 md5.o
 md5func.o
+base64.o
 parse-bot.o
 parse-botnet.o
 parse-ctcp.o
@@ -80,7 +84,8 @@ parse-hub.o
 parse-irc.o
 parse-owner.o
 random.o
-signals.o";
+signals.o
+scram.o";
 
 my $moduleList = "control
 date
@@ -97,8 +102,10 @@ uptime
 vctrl
 words";
 
-require 'tests/test.pm';
-chdir('tests');
+
+require "$current_directory/tests/test.pm";
+chdir("$current_directory/tests");
+
 print "[*] Running system check (this may take a while)\n";
 my $os = `uname`;
 $os =~ s/\n//;
@@ -124,9 +131,9 @@ else {
 }
 
 if($ssl) {
-	print "[+] Enabling SSL support (irc, partyline)\n";
-	$cflags .= "-DHAVE_SSL ";
-	$lflags .= "-lssl ";
+    print "[+] Enabling SSL support (irc, partyline)\n";
+    $cflags .= "-DHAVE_SSL ";
+    $lflags .= "-lssl -lcrypto "; # Dodajemy również -lcrypto
 }
 else {
 	print "[-] Disabling SSL support (pass --with-ssl to enable)\n";
@@ -256,10 +263,10 @@ foreach $t (keys %targets)
     print $f "\t\@test -d bin || mkdir bin\n";
 
     if($t =~ /debug|dynamic/) {
-	print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags -export-dynamic\n";
+        print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags -export-dynamic\n";
     }
     else {
-	print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags\n";
+        print $f "\t\@${cc_prefix}g++ $filelist -o $out $targets{$t} $cflags $lflags\n";
     }
 
     if(!($t =~ /debug/)) {

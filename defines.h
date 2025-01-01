@@ -296,6 +296,12 @@
 #define VER_LUZIK		7
 #define VER_MIRC		8
 
+#define SASL_MECHANISM_PLAIN			1
+#define SASL_MECHANISM_EXTERNAL			2
+#define SASL_MECHANISM_SCRAM_SHA_1		3
+#define SASL_MECHANISM_SCRAM_SHA_256	4
+#define SASL_MECHANISM_SCRAM_SHA_512	5
+
 #ifdef HAVE_DEBUG
 	#define DEBUG(x)	if(debug) x
 #else

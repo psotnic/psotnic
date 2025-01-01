@@ -50,6 +50,7 @@ class options
 class ent
 {
 	public:
+
 	const char *name;
 	static options::event _event;
 	bool dontPrintIfDefault;
