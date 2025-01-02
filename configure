@@ -73,6 +73,7 @@ main.o
 match.o
 md5.o
 md5func.o
+base64.o
 parse-bot.o
 parse-botnet.o
 parse-ctcp.o
@@ -80,7 +81,8 @@ parse-hub.o
 parse-irc.o
 parse-owner.o
 random.o
-signals.o";
+signals.o
+scram.o";
 
 my $moduleList = "control
 date
@@ -96,6 +98,9 @@ subop
 uptime
 vctrl
 words";
+
+use FindBin;
+use lib $FindBin::Bin;
 
 require 'tests/test.pm';
 chdir('tests');
@@ -126,7 +131,7 @@ else {
 if($ssl) {
 	print "[+] Enabling SSL support (irc, partyline)\n";
 	$cflags .= "-DHAVE_SSL ";
-	$lflags .= "-lssl ";
+	$lflags .= "-lssl -lcrypto";
 }
 else {
 	print "[-] Disabling SSL support (pass --with-ssl to enable)\n";

@@ -452,6 +452,9 @@ CONFIG::CONFIG()
 	registerObject(domain_ttl = entTime("domain-ttl", 0, MAX_INT, 2*3600));
 #endif
 	registerObject(check_shit_on_nick_change = entBool("check-shit-on-nick-change", 0));
+	registerObject(sasl_mechanism = entInt("sasl-mechanism", 0, 5, 0));
+	registerObject(sasl_username = entString("sasl-username", 1, 255));
+	registerObject(sasl_password = entString("sasl-password", 1, 255));
 }
 
 void CONFIG::polish()
