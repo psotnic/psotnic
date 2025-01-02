@@ -26,7 +26,9 @@ static char arg[11][MAX_LEN], *a, buf[MAX_LEN];
 static chan *ch;
 static chanuser *p;
 static int i;
+#ifdef HAVE_SSL
 static Scram* scram;
+#endif
 
 void parse_irc(char *data)
 {
@@ -827,7 +829,7 @@ void parse_irc(char *data)
 				if(!strcasecmp(cap, "sasl")
 					&& config.sasl_mechanism > 0 && config.sasl_username.getLen() && config.sasl_password.getLen())
 				{
-					net.irc.send("CAP REQ :sasl");
+					net.irc.send("CAP REQ :sasl", NULL);
 					send_cap_end = false;
 				}
 			}
@@ -835,7 +837,7 @@ void parse_irc(char *data)
 			if(send_cap_end)
 			{
 				// No caps requested
-				net.irc.send("CAP END");
+				net.irc.send("CAP END", NULL);
 			}
 		}
 		if(!strcmp(arg[3], "ACK"))
@@ -851,8 +853,9 @@ void parse_irc(char *data)
 				{
 					if(config.sasl_mechanism == SASL_MECHANISM_PLAIN)
 					{
-						net.irc.send("AUTHENTICATE PLAIN");
+						net.irc.send("AUTHENTICATE PLAIN", NULL);
 					}
+#ifdef HAVE_SSL
 					if (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1
 						|| config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256
 						|| config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512)
@@ -874,19 +877,19 @@ void parse_irc(char *data)
 						catch (const std::invalid_argument& e) {
 							scram = nullptr;
 							net.send(HAS_N, "[-] Could not create SCRAM session: ", e.what(), NULL);
-							net.irc.send("QUIT :changing servers");
+							net.irc.send("QUIT :changing servers", NULL);
 						}
 
 						net.irc.send("AUTHENTICATE ", mechanism.c_str(), NULL);
 					}
-
+#endif
 					send_cap_end = false;
 				}
 			}
 
 			if(send_cap_end)
 			{
-				net.irc.send("CAP END");
+				net.irc.send("CAP END", NULL);
 			}
 		}
 	}
@@ -914,27 +917,29 @@ void parse_irc(char *data)
 			}
 			else if(config.sasl_mechanism == SASL_MECHANISM_EXTERNAL)
 			{
-				net.irc.send("AUTHENTICATE +");
+				net.irc.send("AUTHENTICATE +", NULL);
 			}
 		}
+#ifdef HAVE_SSL
 		if (scram != nullptr && (config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_1 ||
 								 config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_256 ||
 								 config.sasl_mechanism == SASL_MECHANISM_SCRAM_SHA_512))
 		{
 			scram->authenticate(std::string(arg[1]));
 		}
+#endif
 	}
 	if(!strcmp(arg[1], "903") )
 	{
 		// SASL authentication successful
 		DEBUG(printf("[-] SASL authentication successful\n"));
-		net.irc.send("CAP END");
+		net.irc.send("CAP END", NULL);
 	}
 	if(!strcmp(arg[1], "904") )
 	{
 		// SASL authentication failed
 		DEBUG(printf("[-] SASL authentication failed\n"));
-		net.send(HAS_N, "[-] SASL authentication failed on ", (const char *) config.currentServer->getHost().connectionString, NULL);
+		net.send(HAS_N, "[-] SASL authentication failed on ", arg[0], NULL);
 		net.irc.send("QUIT :changing servers", NULL);
 	}
 	/* some numeric replies */

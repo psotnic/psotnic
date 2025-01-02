@@ -1,3 +1,4 @@
+#ifdef HAVE_SSL
 #ifndef GAY_PSOTNIC_SRC_SCRAM_H
 #define GAY_PSOTNIC_SRC_SCRAM_H
 
@@ -50,3 +51,4 @@ private:
 
 
 #endif //GAY_PSOTNIC_SRC_SCRAM_H
+#endif // HAVE_SSL

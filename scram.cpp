@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-
+#ifdef HAVE_SSL
 #include "prots.h"
 #include "global-var.h"
 #include "scram.h"
@@ -298,7 +298,7 @@ void Scram::authenticate(std::string input)
 	else if (status == Scram::SCRAM_ERROR)
 	{
 		DEBUG(printf("SCRAM authentication failed\n"));
-		ME.quit("changing servers");
+		net.irc.send("QUIT :changing servers", NULL);
 	}
 }
 
@@ -319,3 +319,4 @@ static int base64Decode(std::string &str)
 	str.append(dest, len);
 	return len;
 }
+#endif
